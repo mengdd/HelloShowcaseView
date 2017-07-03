@@ -50,7 +50,6 @@ public class ShowcaseView extends RelativeLayout {
 
         isReady = false;
 
-
         eraserPaint = new Paint();
         eraserPaint.setColor(0xFFFFFFFF);
         eraserPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.CLEAR));
@@ -58,6 +57,20 @@ public class ShowcaseView extends RelativeLayout {
 
     }
 
+    private void updateBitmap() {
+        if (bitmapBuffer == null || haveBoundsChanged()) {
+            if (bitmapBuffer != null) {
+                bitmapBuffer.recycle();
+            }
+            bitmapBuffer = Bitmap.createBitmap(getMeasuredWidth(), getMeasuredHeight(), Bitmap.Config.ARGB_8888);
+            bufferCanvas = new Canvas(bitmapBuffer);
+        }
+    }
+
+    private boolean haveBoundsChanged() {
+        return getMeasuredWidth() != bitmapBuffer.getWidth() ||
+                getMeasuredHeight() != bitmapBuffer.getHeight();
+    }
 
     @Override
     protected void onDraw(Canvas canvas) {
@@ -65,12 +78,7 @@ public class ShowcaseView extends RelativeLayout {
 
         if (!isReady) return;
 
-        if (bitmapBuffer == null || canvas == null) {
-            if (bitmapBuffer != null) bitmapBuffer.recycle();
-
-            bitmapBuffer = Bitmap.createBitmap(getMeasuredWidth(), getMeasuredHeight(), Bitmap.Config.ARGB_8888);
-            bufferCanvas = new Canvas(bitmapBuffer);
-        }
+        updateBitmap();
 
         bufferCanvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
         bufferCanvas.drawColor(maskColor);
@@ -84,7 +92,7 @@ public class ShowcaseView extends RelativeLayout {
         removeViewFromLayout();
         ((ViewGroup) activity.getWindow().getDecorView()).addView(this);
     }
-    
+
     private void show() {
         setReady(true);
         setVisibility(VISIBLE);
@@ -110,10 +118,13 @@ public class ShowcaseView extends RelativeLayout {
         targetView = target;
     }
 
-
-    public void setContentView(@LayoutRes int contentViewLayout) {
-        View contentView = LayoutInflater.from(this.getContext()).inflate(contentViewLayout, this, false);
-        this.addView(contentView);
+    public void setContentView(@LayoutRes final int contentViewLayout) {
+        final View contentView = LayoutInflater.from(this.getContext()).inflate(contentViewLayout, this, false);
+        RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        layoutParams.addRule(CENTER_IN_PARENT, TRUE);
+        contentView.setLayoutParams(layoutParams);
+        addView(contentView);
     }
 
     public static class Builder {
