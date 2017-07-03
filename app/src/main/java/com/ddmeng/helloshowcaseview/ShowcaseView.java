@@ -5,158 +5,144 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.Point;
+import android.graphics.Paint;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffXfermode;
+import android.support.annotation.LayoutRes;
 import android.util.AttributeSet;
+import android.view.LayoutInflater;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.RelativeLayout;
 
+
 public class ShowcaseView extends RelativeLayout {
+
+    private int maskColor;
+    private boolean isReady;
+
+    private Target targetView;
+
+    private Paint eraserPaint;
     private Bitmap bitmapBuffer;
-    private boolean hasNoTarget = false;
-    private final int[] positionInWindow = new int[2];
-    private ShowcaseDrawer showcaseDrawer;
-    private int showcaseX = -1;
-    private int showcaseY = -1;
-    private int showcaseWidth = -1;
-    private int showcaseHeight = -1;
+    private Canvas bufferCanvas;
+
 
     public ShowcaseView(Context context) {
         super(context);
-        init();
+        init(context);
     }
 
     public ShowcaseView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        init();
+        init(context);
     }
 
     public ShowcaseView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        init();
+        init(context);
     }
 
-    private void init() {
-        showcaseDrawer = new ShowcaseDrawer();
-        int backgroundColor = Color.argb(128, 80, 80, 80);
-        showcaseDrawer.setBackgroundColour(backgroundColor);
-        setBackgroundColor(backgroundColor);
+    private void init(Context context) {
+        setWillNotDraw(false);
+        setVisibility(INVISIBLE);
+        maskColor = 0xff123456;
+
+        isReady = false;
+
+
+        eraserPaint = new Paint();
+        eraserPaint.setColor(0xFFFFFFFF);
+        eraserPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.CLEAR));
+        eraserPaint.setFlags(Paint.ANTI_ALIAS_FLAG);
+
     }
 
-    public void show() {
-        if (canUpdateBitmap()) {
-            updateBitmap();
+
+    @Override
+    protected void onDraw(Canvas canvas) {
+        super.onDraw(canvas);
+
+        if (!isReady) return;
+
+        if (bitmapBuffer == null || canvas == null) {
+            if (bitmapBuffer != null) bitmapBuffer.recycle();
+
+            bitmapBuffer = Bitmap.createBitmap(getMeasuredWidth(), getMeasuredHeight(), Bitmap.Config.ARGB_8888);
+            bufferCanvas = new Canvas(bitmapBuffer);
         }
+
+        bufferCanvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
+        bufferCanvas.drawColor(maskColor);
+
+        bufferCanvas.drawRect(targetView.getRect(), eraserPaint);
+
+        canvas.drawBitmap(bitmapBuffer, 0, 0, null);
+    }
+
+    private void addViewToLayout(Activity activity) {
+        removeViewFromLayout();
+        ((ViewGroup) activity.getWindow().getDecorView()).addView(this);
+    }
+    
+    private void show() {
+        setReady(true);
         setVisibility(VISIBLE);
     }
 
-    public void hide() {
+    public void dismiss() {
         setVisibility(GONE);
+        removeViewFromLayout();
     }
 
-    public void setTarget(final Target target) {
-        setShowcase(target);
-    }
-
-    public void setShowcase(final Target target) {
-        postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                if (canUpdateBitmap()) {
-                    updateBitmap();
-                }
-
-                Point targetPoint = target.getPoint();
-                if (targetPoint != null) {
-                    hasNoTarget = false;
-                    setShowcasePosition(targetPoint);
-                    showcaseWidth = target.getWidth();
-                    showcaseHeight = target.getHeight();
-                } else {
-                    hasNoTarget = true;
-                    invalidate();
-                }
-
-            }
-        }, 100);
-    }
-
-    @Override
-    protected void dispatchDraw(Canvas canvas) {
-        if (showcaseX < 0 || showcaseY < 0 || bitmapBuffer == null) {
-            super.dispatchDraw(canvas);
-            return;
-        }
-
-        //Draw background color
-        showcaseDrawer.erase(bitmapBuffer);
-
-        // Draw the showcase drawable
-        if (!hasNoTarget) {
-            showcaseDrawer.drawShowcase(bitmapBuffer, showcaseX, showcaseY, showcaseWidth, showcaseHeight);
-            showcaseDrawer.drawToCanvas(canvas, bitmapBuffer);
-        }
-
-        super.dispatchDraw(canvas);
-
-    }
-
-    void setShowcasePosition(Point point) {
-        setShowcasePosition(point.x, point.y);
-    }
-
-    void setShowcasePosition(int x, int y) {
-
-        getLocationInWindow(positionInWindow);
-        showcaseX = x - positionInWindow[0];
-        showcaseY = y - positionInWindow[1];
-        invalidate();
-    }
-
-    private boolean canUpdateBitmap() {
-        return getMeasuredHeight() > 0 && getMeasuredWidth() > 0;
-    }
-
-    private void updateBitmap() {
-        if (bitmapBuffer == null || haveBoundsChanged()) {
-            if (bitmapBuffer != null) {
-                bitmapBuffer.recycle();
-            }
-            bitmapBuffer = Bitmap.createBitmap(getMeasuredWidth(), getMeasuredHeight(), Bitmap.Config.ARGB_8888);
+    private void removeViewFromLayout() {
+        if (getParent() != null) {
+            ((ViewGroup) getParent()).removeView(this);
         }
     }
 
-    private boolean haveBoundsChanged() {
-        return getMeasuredWidth() != bitmapBuffer.getWidth() ||
-                getMeasuredHeight() != bitmapBuffer.getHeight();
+
+    private void setReady(boolean isReady) {
+        this.isReady = isReady;
+    }
+
+    private void setTarget(Target target) {
+        targetView = target;
     }
 
 
-    private static void insertShowcaseView(ShowcaseView showcaseView, ViewGroup parent, int parentIndex) {
-        parent.addView(showcaseView, parentIndex);
-        showcaseView.show();
-
+    public void setContentView(@LayoutRes int contentViewLayout) {
+        View contentView = LayoutInflater.from(this.getContext()).inflate(contentViewLayout, this, false);
+        this.addView(contentView);
     }
 
     public static class Builder {
-        private final Activity activity;
-        private final ShowcaseView showcaseView;
-        private ViewGroup parent;
-        private int parentIndex;
+
+        private ShowcaseView showcaseView;
+        private Activity activity;
 
         public Builder(Activity activity) {
             this.activity = activity;
-            this.showcaseView = new ShowcaseView(activity);
-            this.parent = (ViewGroup) activity.findViewById(android.R.id.content);
-            this.parentIndex = parent.getChildCount();
+            showcaseView = new ShowcaseView(activity);
         }
 
-        public Builder setTarget(Target target) {
-            showcaseView.setTarget(target);
+        public Builder setTarget(View view) {
+            showcaseView.setTarget(new ViewTarget(view));
+            return this;
+        }
+
+        public Builder setContentView(@LayoutRes int contentView) {
+            showcaseView.setContentView(contentView);
             return this;
         }
 
         public ShowcaseView build() {
-            insertShowcaseView(showcaseView, parent, parentIndex);
+            showcaseView.addViewToLayout(activity);
+            return showcaseView;
+        }
+
+        public ShowcaseView show() {
+            build().show();
             return showcaseView;
         }
 

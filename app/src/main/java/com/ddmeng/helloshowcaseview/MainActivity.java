@@ -11,9 +11,9 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         View viewById = findViewById(R.id.hello);
-        ViewTarget viewTarget = new ViewTarget(viewById);
         new ShowcaseView.Builder(this)
-                .setTarget(viewTarget)
-                .build();
+                .setContentView(R.layout.show_case_content_view)
+                .setTarget(viewById)
+                .show();
     }
 }
