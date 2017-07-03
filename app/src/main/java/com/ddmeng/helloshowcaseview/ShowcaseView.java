@@ -19,14 +19,12 @@ import android.widget.RelativeLayout;
 public class ShowcaseView extends RelativeLayout {
 
     private int maskColor;
-    private boolean isReady;
 
     private Target targetView;
 
     private Paint eraserPaint;
     private Bitmap bitmapBuffer;
     private Canvas bufferCanvas;
-
 
     public ShowcaseView(Context context) {
         super(context);
@@ -47,8 +45,6 @@ public class ShowcaseView extends RelativeLayout {
         setWillNotDraw(false);
         setVisibility(INVISIBLE);
         maskColor = 0xff123456;
-
-        isReady = false;
 
         eraserPaint = new Paint();
         eraserPaint.setColor(0xFFFFFFFF);
@@ -76,8 +72,6 @@ public class ShowcaseView extends RelativeLayout {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        if (!isReady) return;
-
         updateBitmap();
 
         bufferCanvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
@@ -94,7 +88,6 @@ public class ShowcaseView extends RelativeLayout {
     }
 
     private void show() {
-        setReady(true);
         setVisibility(VISIBLE);
     }
 
@@ -107,11 +100,6 @@ public class ShowcaseView extends RelativeLayout {
         if (getParent() != null) {
             ((ViewGroup) getParent()).removeView(this);
         }
-    }
-
-
-    private void setReady(boolean isReady) {
-        this.isReady = isReady;
     }
 
     private void setTarget(Target target) {
