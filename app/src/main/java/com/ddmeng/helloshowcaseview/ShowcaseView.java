@@ -8,6 +8,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
+import android.support.annotation.IdRes;
 import android.support.annotation.LayoutRes;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
@@ -149,6 +150,16 @@ public class ShowcaseView extends RelativeLayout {
         addView(contentView);
     }
 
+    public void setContentDismissButton(@IdRes final int dismissButtonId) {
+        View dismissButton = findViewById(dismissButtonId);
+        dismissButton.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dismiss();
+            }
+        });
+    }
+
     public static class Builder {
 
         private ShowcaseView showcaseView;
@@ -166,6 +177,11 @@ public class ShowcaseView extends RelativeLayout {
 
         public Builder setContentView(@LayoutRes int contentView) {
             showcaseView.setContentView(contentView);
+            return this;
+        }
+
+        public Builder setContentDismissButton(@IdRes int dismissButtonId) {
+            showcaseView.setContentDismissButton(dismissButtonId);
             return this;
         }
 

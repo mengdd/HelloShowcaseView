@@ -23,6 +23,7 @@ public class MainActivity extends AppCompatActivity {
         });
         new ShowcaseView.Builder(this)
                 .setContentView(R.layout.show_case_content_view)
+                .setContentDismissButton(R.id.end_button)
                 .setTarget(viewById)
                 .show();
     }
