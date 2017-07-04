@@ -35,6 +35,11 @@ public class ViewTarget implements Target {
     }
 
     @Override
+    public View getView() {
+        return view;
+    }
+
+    @Override
     public int getWidth() {
         return view.getWidth();
     }

@@ -11,6 +11,7 @@ import android.graphics.PorterDuffXfermode;
 import android.support.annotation.LayoutRes;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.RelativeLayout;
@@ -20,7 +21,7 @@ public class ShowcaseView extends RelativeLayout {
 
     private int maskColor;
 
-    private Target targetView;
+    private Target target;
 
     private Paint eraserPaint;
     private Bitmap bitmapBuffer;
@@ -69,6 +70,39 @@ public class ShowcaseView extends RelativeLayout {
     }
 
     @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        float x = event.getX();
+        float y = event.getY();
+
+        boolean isTouchOnFocus = target.getRect().contains((int) x, (int) y);
+
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+
+                if (isTouchOnFocus) {
+                    target.getView().setPressed(true);
+                    target.getView().invalidate();
+                }
+
+                return true;
+            case MotionEvent.ACTION_UP:
+
+                if (target.getView().isPressed()) {
+                    dismiss();
+                    target.getView().performClick();
+                    target.getView().setPressed(false);
+                    target.getView().invalidate();
+                }
+
+                return true;
+            default:
+                break;
+        }
+
+        return super.onTouchEvent(event);
+    }
+
+    @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
@@ -77,7 +111,7 @@ public class ShowcaseView extends RelativeLayout {
         bufferCanvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
         bufferCanvas.drawColor(maskColor);
 
-        bufferCanvas.drawRect(targetView.getRect(), eraserPaint);
+        bufferCanvas.drawRect(target.getRect(), eraserPaint);
 
         canvas.drawBitmap(bitmapBuffer, 0, 0, null);
     }
@@ -103,7 +137,7 @@ public class ShowcaseView extends RelativeLayout {
     }
 
     private void setTarget(Target target) {
-        targetView = target;
+        this.target = target;
     }
 
     public void setContentView(@LayoutRes final int contentViewLayout) {
