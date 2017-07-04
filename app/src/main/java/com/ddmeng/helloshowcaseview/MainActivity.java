@@ -1,8 +1,8 @@
 package com.ddmeng.helloshowcaseview;
 
+import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
@@ -16,7 +16,6 @@ public class MainActivity extends AppCompatActivity {
         viewById.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.i("ddmeng", "onClick");
                 Toast.makeText(MainActivity.this, "Hello World clicked!", Toast.LENGTH_SHORT).show();
             }
         });
@@ -28,6 +27,7 @@ public class MainActivity extends AppCompatActivity {
                         .setContentView(R.layout.show_case_content_view)
                         .setContentDismissButton(R.id.end_button)
                         .setTarget(viewById)
+                        .setMaskColor(Color.argb(180, 0, 0, 0))
                         .setFadeInEnabled(true)
                         .setFadeInDuration(1000)
                         .setFadeOutEnabled(true)

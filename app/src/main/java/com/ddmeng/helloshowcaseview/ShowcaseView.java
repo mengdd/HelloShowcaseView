@@ -10,6 +10,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
+import android.support.annotation.ColorInt;
 import android.support.annotation.IdRes;
 import android.support.annotation.LayoutRes;
 import android.util.AttributeSet;
@@ -23,8 +24,9 @@ import android.widget.RelativeLayout;
 public class ShowcaseView extends RelativeLayout {
 
     public static final int DEFAULT_ANIMATION_DURATION = 300;
-    private int maskColor;
+    public static final int DEFAULT_MASK_COLOR = 0x80000000;
 
+    private int maskColor = DEFAULT_MASK_COLOR;
     private Target target;
 
     private Paint eraserPaint;
@@ -54,7 +56,6 @@ public class ShowcaseView extends RelativeLayout {
     private void init(Context context) {
         setWillNotDraw(false);
         setVisibility(INVISIBLE);
-        maskColor = 0xff123456;
 
         eraserPaint = new Paint();
         eraserPaint.setColor(0xFFFFFFFF);
@@ -185,6 +186,10 @@ public class ShowcaseView extends RelativeLayout {
         this.fadeOutDuration = fadeOutDuration;
     }
 
+    public void setMaskColor(@ColorInt int maskColor) {
+        this.maskColor = maskColor;
+    }
+
     public void setContentView(@LayoutRes final int contentViewLayout) {
         final View contentView = LayoutInflater.from(this.getContext()).inflate(contentViewLayout, this, false);
         RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(
@@ -226,6 +231,11 @@ public class ShowcaseView extends RelativeLayout {
 
         public Builder setContentDismissButton(@IdRes int dismissButtonId) {
             showcaseView.setContentDismissButton(dismissButtonId);
+            return this;
+        }
+
+        public Builder setMaskColor(@ColorInt int maskColor) {
+            showcaseView.setMaskColor(maskColor);
             return this;
         }
 
