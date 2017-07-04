@@ -28,6 +28,7 @@ public class MainActivity extends AppCompatActivity {
                         .setContentDismissButton(R.id.end_button)
                         .setTarget(viewById)
                         .setMaskColor(Color.argb(180, 0, 0, 0))
+                        .setCornerRadiusDimen(R.dimen.target_corner_radius)
                         .setFadeInEnabled(true)
                         .setFadeInDuration(1000)
                         .setFadeOutEnabled(true)

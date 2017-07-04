@@ -11,6 +11,7 @@ import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.support.annotation.ColorInt;
+import android.support.annotation.DimenRes;
 import android.support.annotation.IdRes;
 import android.support.annotation.LayoutRes;
 import android.util.AttributeSet;
@@ -25,6 +26,7 @@ public class ShowcaseView extends RelativeLayout {
 
     public static final int DEFAULT_ANIMATION_DURATION = 300;
     public static final int DEFAULT_MASK_COLOR = 0x80000000;
+    public static final float DEFAULT_CORNER_RADIUS = 0;
 
     private int maskColor = DEFAULT_MASK_COLOR;
     private Target target;
@@ -37,6 +39,8 @@ public class ShowcaseView extends RelativeLayout {
     private boolean isFadeOutEnabled;
     private long fadeInDuration = DEFAULT_ANIMATION_DURATION;
     private long fadeOutDuration = DEFAULT_ANIMATION_DURATION;
+
+    private float cornerRadius = DEFAULT_CORNER_RADIUS;
 
     public ShowcaseView(Context context) {
         super(context);
@@ -121,7 +125,7 @@ public class ShowcaseView extends RelativeLayout {
         bufferCanvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
         bufferCanvas.drawColor(maskColor);
 
-        bufferCanvas.drawRect(target.getRect(), eraserPaint);
+        bufferCanvas.drawRoundRect(target.getRectF(), cornerRadius, cornerRadius, eraserPaint);
 
         canvas.drawBitmap(bitmapBuffer, 0, 0, null);
     }
@@ -190,6 +194,10 @@ public class ShowcaseView extends RelativeLayout {
         this.maskColor = maskColor;
     }
 
+    public void setCornerRadius(float cornerRadius) {
+        this.cornerRadius = cornerRadius;
+    }
+
     public void setContentView(@LayoutRes final int contentViewLayout) {
         final View contentView = LayoutInflater.from(this.getContext()).inflate(contentViewLayout, this, false);
         RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(
@@ -236,6 +244,17 @@ public class ShowcaseView extends RelativeLayout {
 
         public Builder setMaskColor(@ColorInt int maskColor) {
             showcaseView.setMaskColor(maskColor);
+            return this;
+        }
+
+        public Builder setCornerRadius(float cornerRadius) {
+            showcaseView.setCornerRadius(cornerRadius);
+            return this;
+        }
+
+        public Builder setCornerRadiusDimen(@DimenRes int cornerRadiusDimen) {
+            int cornerRadius = activity.getResources().getDimensionPixelOffset(cornerRadiusDimen);
+            showcaseView.setCornerRadius(cornerRadius);
             return this;
         }
 
