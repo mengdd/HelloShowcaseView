@@ -1,5 +1,7 @@
 package com.ddmeng.helloshowcaseview;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -20,6 +22,7 @@ import android.widget.RelativeLayout;
 
 public class ShowcaseView extends RelativeLayout {
 
+    public static final int DEFAULT_ANIMATION_DURATION = 300;
     private int maskColor;
 
     private Target target;
@@ -27,6 +30,11 @@ public class ShowcaseView extends RelativeLayout {
     private Paint eraserPaint;
     private Bitmap bitmapBuffer;
     private Canvas bufferCanvas;
+
+    private boolean isFadeInEnabled;
+    private boolean isFadeOutEnabled;
+    private long fadeInDuration = DEFAULT_ANIMATION_DURATION;
+    private long fadeOutDuration = DEFAULT_ANIMATION_DURATION;
 
     public ShowcaseView(Context context) {
         super(context);
@@ -122,13 +130,33 @@ public class ShowcaseView extends RelativeLayout {
         ((ViewGroup) activity.getWindow().getDecorView()).addView(this);
     }
 
-    private void show() {
-        setVisibility(VISIBLE);
+    public void show() {
+        if (isFadeInEnabled) {
+            AnimationFactory.fadeIn(this, fadeInDuration, new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationStart(Animator animation) {
+                    setVisibility(VISIBLE);
+                }
+            });
+
+        } else {
+            setVisibility(VISIBLE);
+        }
     }
 
     public void dismiss() {
-        setVisibility(GONE);
-        removeViewFromLayout();
+        if (isFadeOutEnabled) {
+            AnimationFactory.fadeOut(this, fadeOutDuration, new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    setVisibility(GONE);
+                    removeViewFromLayout();
+                }
+            });
+        } else {
+            setVisibility(GONE);
+            removeViewFromLayout();
+        }
     }
 
     private void removeViewFromLayout() {
@@ -137,8 +165,24 @@ public class ShowcaseView extends RelativeLayout {
         }
     }
 
-    private void setTarget(Target target) {
+    public void setTarget(Target target) {
         this.target = target;
+    }
+
+    public void setFadeInEnabled(boolean fadeInEnabled) {
+        isFadeInEnabled = fadeInEnabled;
+    }
+
+    public void setFadeOutEnabled(boolean fadeOutEnabled) {
+        isFadeOutEnabled = fadeOutEnabled;
+    }
+
+    public void setFadeInDuration(long fadeInDuration) {
+        this.fadeInDuration = fadeInDuration;
+    }
+
+    public void setFadeOutDuration(long fadeOutDuration) {
+        this.fadeOutDuration = fadeOutDuration;
     }
 
     public void setContentView(@LayoutRes final int contentViewLayout) {
@@ -182,6 +226,26 @@ public class ShowcaseView extends RelativeLayout {
 
         public Builder setContentDismissButton(@IdRes int dismissButtonId) {
             showcaseView.setContentDismissButton(dismissButtonId);
+            return this;
+        }
+
+        public Builder setFadeInEnabled(boolean fadeInEnabled) {
+            showcaseView.setFadeInEnabled(fadeInEnabled);
+            return this;
+        }
+
+        public Builder setFadeOutEnabled(boolean fadeOutEnabled) {
+            showcaseView.setFadeOutEnabled(fadeOutEnabled);
+            return this;
+        }
+
+        public Builder setFadeInDuration(long fadeInDuration) {
+            showcaseView.setFadeInDuration(fadeInDuration);
+            return this;
+        }
+
+        public Builder setFadeOutDuration(long fadeOutDuration) {
+            showcaseView.setFadeOutDuration(fadeOutDuration);
             return this;
         }
 

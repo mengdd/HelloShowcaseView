@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     tools:context="com.ddmeng.helloshowcaseview.MainActivity">
 
     <TextView
@@ -13,4 +14,10 @@
         android:gravity="center"
         android:text="Hello World!" />
 
+    <Button
+        android:id="@+id/show_button"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:gravity="center"
+        android:text="Show" />
 </LinearLayout>

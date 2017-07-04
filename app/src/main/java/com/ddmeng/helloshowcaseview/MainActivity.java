@@ -12,19 +12,29 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        View viewById = findViewById(R.id.hello);
+        final View viewById = findViewById(R.id.hello);
         viewById.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Log.i("ddmeng", "onClick");
                 Toast.makeText(MainActivity.this, "Hello World clicked!", Toast.LENGTH_SHORT).show();
-                ;
             }
         });
-        new ShowcaseView.Builder(this)
-                .setContentView(R.layout.show_case_content_view)
-                .setContentDismissButton(R.id.end_button)
-                .setTarget(viewById)
-                .show();
+        View showButton = findViewById(R.id.show_button);
+        showButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                new ShowcaseView.Builder(MainActivity.this)
+                        .setContentView(R.layout.show_case_content_view)
+                        .setContentDismissButton(R.id.end_button)
+                        .setTarget(viewById)
+                        .setFadeInEnabled(true)
+                        .setFadeInDuration(1000)
+                        .setFadeOutEnabled(true)
+                        .setFadeOutDuration(2000)
+                        .show();
+            }
+        });
+
     }
 }
