@@ -11,7 +11,6 @@ import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.support.annotation.ColorInt;
-import android.support.annotation.DimenRes;
 import android.support.annotation.IdRes;
 import android.support.annotation.LayoutRes;
 import android.util.AttributeSet;
@@ -26,7 +25,6 @@ public class ShowcaseView extends RelativeLayout {
 
     public static final int DEFAULT_ANIMATION_DURATION = 300;
     public static final int DEFAULT_MASK_COLOR = 0x80000000;
-    public static final float DEFAULT_CORNER_RADIUS = 0;
 
     private int maskColor = DEFAULT_MASK_COLOR;
     private Target target;
@@ -34,13 +32,22 @@ public class ShowcaseView extends RelativeLayout {
     private Paint eraserPaint;
     private Bitmap bitmapBuffer;
     private Canvas bufferCanvas;
+    private Shape shape;
 
     private boolean isFadeInEnabled;
     private boolean isFadeOutEnabled;
     private long fadeInDuration = DEFAULT_ANIMATION_DURATION;
     private long fadeOutDuration = DEFAULT_ANIMATION_DURATION;
 
-    private float cornerRadius = DEFAULT_CORNER_RADIUS;
+    private ShowcaseViewEventListener eventListener;
+
+    public interface ShowcaseViewEventListener {
+        void onTargetViewClicked();
+
+        void onContentDismissButtonClicked();
+
+        void onDismissed();
+    }
 
     public ShowcaseView(Context context) {
         super(context);
@@ -62,7 +69,7 @@ public class ShowcaseView extends RelativeLayout {
         setVisibility(INVISIBLE);
 
         eraserPaint = new Paint();
-        eraserPaint.setColor(0xFFFFFFFF);
+        eraserPaint.setColor(Color.WHITE);
         eraserPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.CLEAR));
         eraserPaint.setFlags(Paint.ANTI_ALIAS_FLAG);
 
@@ -92,7 +99,6 @@ public class ShowcaseView extends RelativeLayout {
 
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
-
                 if (isTouchOnFocus) {
                     target.getView().setPressed(true);
                     target.getView().invalidate();
@@ -100,12 +106,15 @@ public class ShowcaseView extends RelativeLayout {
 
                 return true;
             case MotionEvent.ACTION_UP:
-
                 if (target.getView().isPressed()) {
                     dismiss();
                     target.getView().performClick();
                     target.getView().setPressed(false);
                     target.getView().invalidate();
+
+                    if (eventListener != null) {
+                        eventListener.onTargetViewClicked();
+                    }
                 }
 
                 return true;
@@ -119,13 +128,12 @@ public class ShowcaseView extends RelativeLayout {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-
         updateBitmap();
 
         bufferCanvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
         bufferCanvas.drawColor(maskColor);
 
-        bufferCanvas.drawRoundRect(target.getRectF(), cornerRadius, cornerRadius, eraserPaint);
+        shape.onDraw(bufferCanvas, eraserPaint);
 
         canvas.drawBitmap(bitmapBuffer, 0, 0, null);
     }
@@ -133,6 +141,10 @@ public class ShowcaseView extends RelativeLayout {
     private void addViewToLayout(Activity activity) {
         removeViewFromLayout();
         ((ViewGroup) activity.getWindow().getDecorView()).addView(this);
+    }
+
+    public boolean isShowing() {
+        return getParent() != null && getVisibility() == VISIBLE;
     }
 
     public void show() {
@@ -154,13 +166,19 @@ public class ShowcaseView extends RelativeLayout {
             AnimationFactory.fadeOut(this, fadeOutDuration, new AnimatorListenerAdapter() {
                 @Override
                 public void onAnimationEnd(Animator animation) {
-                    setVisibility(GONE);
-                    removeViewFromLayout();
+                    doDismiss();
                 }
             });
         } else {
-            setVisibility(GONE);
-            removeViewFromLayout();
+            doDismiss();
+        }
+    }
+
+    private void doDismiss() {
+        setVisibility(GONE);
+        removeViewFromLayout();
+        if (eventListener != null) {
+            eventListener.onDismissed();
         }
     }
 
@@ -172,6 +190,10 @@ public class ShowcaseView extends RelativeLayout {
 
     public void setTarget(Target target) {
         this.target = target;
+    }
+
+    public void setShape(Shape shape) {
+        this.shape = shape;
     }
 
     public void setFadeInEnabled(boolean fadeInEnabled) {
@@ -194,10 +216,6 @@ public class ShowcaseView extends RelativeLayout {
         this.maskColor = maskColor;
     }
 
-    public void setCornerRadius(float cornerRadius) {
-        this.cornerRadius = cornerRadius;
-    }
-
     public void setContentView(@LayoutRes final int contentViewLayout) {
         final View contentView = LayoutInflater.from(this.getContext()).inflate(contentViewLayout, this, false);
         RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(
@@ -213,8 +231,15 @@ public class ShowcaseView extends RelativeLayout {
             @Override
             public void onClick(View v) {
                 dismiss();
+                if (eventListener != null) {
+                    eventListener.onContentDismissButtonClicked();
+                }
             }
         });
+    }
+
+    public void setEventListener(ShowcaseViewEventListener eventListener) {
+        this.eventListener = eventListener;
     }
 
     public static class Builder {
@@ -228,6 +253,9 @@ public class ShowcaseView extends RelativeLayout {
         }
 
         public Builder setTarget(View view) {
+            if (view == null) {
+                throw new IllegalArgumentException("the target view is null!");
+            }
             showcaseView.setTarget(new ViewTarget(view));
             return this;
         }
@@ -244,17 +272,6 @@ public class ShowcaseView extends RelativeLayout {
 
         public Builder setMaskColor(@ColorInt int maskColor) {
             showcaseView.setMaskColor(maskColor);
-            return this;
-        }
-
-        public Builder setCornerRadius(float cornerRadius) {
-            showcaseView.setCornerRadius(cornerRadius);
-            return this;
-        }
-
-        public Builder setCornerRadiusDimen(@DimenRes int cornerRadiusDimen) {
-            int cornerRadius = activity.getResources().getDimensionPixelOffset(cornerRadiusDimen);
-            showcaseView.setCornerRadius(cornerRadius);
             return this;
         }
 
@@ -278,8 +295,22 @@ public class ShowcaseView extends RelativeLayout {
             return this;
         }
 
+        public Builder setEventListener(ShowcaseViewEventListener listener) {
+            showcaseView.setEventListener(listener);
+            return this;
+        }
+
+        public Builder setShape(Shape shape) {
+            showcaseView.setShape(shape);
+            return this;
+        }
+
         public ShowcaseView build() {
             showcaseView.addViewToLayout(activity);
+            if (showcaseView.shape == null) {
+                showcaseView.setShape(new RectShape(0, 0, 0));
+            }
+            showcaseView.shape.setTarget(showcaseView.target);
             return showcaseView;
         }
 
@@ -287,7 +318,5 @@ public class ShowcaseView extends RelativeLayout {
             build().show();
             return showcaseView;
         }
-
     }
-
 }
