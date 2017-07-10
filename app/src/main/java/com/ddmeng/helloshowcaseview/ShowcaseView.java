@@ -21,7 +21,7 @@ import android.view.ViewGroup;
 import android.widget.RelativeLayout;
 
 
-public class ShowcaseView extends RelativeLayout {
+public class ShowcaseView extends RelativeLayout implements View.OnLayoutChangeListener {
 
     public static final int DEFAULT_ANIMATION_DURATION = 300;
     public static final int DEFAULT_MASK_COLOR = 0x80000000;
@@ -72,7 +72,6 @@ public class ShowcaseView extends RelativeLayout {
         eraserPaint.setColor(Color.WHITE);
         eraserPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.CLEAR));
         eraserPaint.setFlags(Paint.ANTI_ALIAS_FLAG);
-
     }
 
     private void updateBitmap() {
@@ -126,8 +125,17 @@ public class ShowcaseView extends RelativeLayout {
     }
 
     @Override
+    public void onLayoutChange(View v, int left, int top, int right, int bottom,
+                               int oldLeft, int oldTop, int oldRight, int oldBottom) {
+        invalidate();
+    }
+
+    @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
+        if (getMeasuredWidth() * getMeasuredHeight() == 0) {
+            return;
+        }
         updateBitmap();
 
         bufferCanvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
@@ -174,7 +182,12 @@ public class ShowcaseView extends RelativeLayout {
         }
     }
 
+    public void dismissWithoutAnimation() {
+        doDismiss();
+    }
+
     private void doDismiss() {
+        target.getView().removeOnLayoutChangeListener(this);
         setVisibility(GONE);
         removeViewFromLayout();
         if (eventListener != null) {
@@ -190,6 +203,7 @@ public class ShowcaseView extends RelativeLayout {
 
     public void setTarget(Target target) {
         this.target = target;
+        target.getView().addOnLayoutChangeListener(this);
     }
 
     public void setShape(Shape shape) {
