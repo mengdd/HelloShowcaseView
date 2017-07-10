@@ -5,7 +5,7 @@ A custom showcase view to highlight the target view and show some hint for new f
 ## Features
 - The highlight area could be rectangle and allowing extra padding and round corners.
 - The target view is clickable.
-- The content view can be defined using a separate layout. Not it's centered in screen.
+- The content view can be defined using a separate layout. Now it's centered in screen.
 - The fade in / fade out animation can be customized.
 - Circle shape highlight area support added.
 
